@@ -90,7 +90,8 @@ def validation(model, testloader, criterion, device):
 def make_NN(n_hidden, n_epoch, labelsdict, lr, device, model_name, trainloader, validloader, testloader, train_data,
             from_scratch,
             train_all_parameters):
-    name = model_name + "_all" if train_all_parameters else "" + "_scr" if from_scratch else ""
+    name = model_name + ("_all" if train_all_parameters else "") + ("_scr" if from_scratch else "")
+    print(name)
     # Import pre-trained NN model 
     model = getattr(models, model_name)(pretrained=not from_scratch)
 
