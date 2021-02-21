@@ -30,6 +30,72 @@ def plot_loss(train_loss, val_loss, accuracy, name):
     plt.close()
 
 
+class Myclassifier(nn.Module):
+    def __init__(self, out_dim, hidden=1024, p=0.5):
+        super().__init__()
+        self.layer1 = nn.Sequential(
+            nn.Conv2d(in_channels=3, out_channels=32, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(32),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+
+        self.layer2 = nn.Sequential(
+            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.BatchNorm2d(32),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+
+        self.layer3 = nn.Sequential(
+            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(64),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+
+        self.layer4 = nn.Sequential(
+            nn.Conv2d(in_channels=64, out_channels=64, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.BatchNorm2d(64),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+
+        self.layer5 = nn.Sequential(
+            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(128),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+
+        self.layer6 = nn.Sequential(
+            nn.Conv2d(in_channels=128, out_channels=128, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.BatchNorm2d(128),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+
+        self.out = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(1152, hidden),
+            nn.LeakyReLU(0.2),
+            nn.Linear(hidden, out_dim)
+        )
+
+        self.flatten = nn.Flatten()
+        self.linear1 = nn.Linear(1152, hidden)
+        self.leakyrelu = nn.LeakyReLU(0.2)
+        self.linear2 = nn.Linear(hidden, out_dim)
+        self.dropout = nn.Dropout(p=p)
+
+    def forward(self, x):
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+        x = self.layer5(x)
+        x = self.layer6(x)
+        x = self.out(x)
+        # x = self.flatten(x)
+        # x = self.linear1(x)
+        # x = self.leakyrelu(x)
+        # x = self.linear2(x)
+        return F.log_softmax(x, dim=1)
+
 # Define classifier class
 class NN_Classifier(nn.Module):
     def __init__(self, input_size, output_size, hidden_layers, drop_p=0.5):
@@ -44,6 +110,11 @@ class NN_Classifier(nn.Module):
         '''
         super().__init__()
         # Add the first layer, input to a hidden layer
+        if isinstance(input_size, list):
+            product = 1
+            for i in input_size:
+                product *= i
+            input_size = product
         self.hidden_layers = nn.ModuleList([nn.Linear(input_size, hidden_layers[0])])
 
         # Add a variable number of more hidden layers
@@ -56,7 +127,6 @@ class NN_Classifier(nn.Module):
 
     def forward(self, x):
         ''' Forward pass through the network, returns the output logits '''
-
         # Forward through each layer in `hidden_layers`, with ReLU activation and dropout
         x = nn.Flatten()(x)
         for linear in self.hidden_layers:
@@ -93,25 +163,32 @@ def make_NN(n_hidden, n_epoch, labelsdict, lr, device, model_name, trainloader, 
     logger.info(name)
 
     # Import pre-trained NN model
-    model = getattr(models, model_name)(pretrained=not from_scratch)
-
-    # Freeze parameters that we don't need to re-train
-    if not train_all_parameters:
-        for param in model.parameters():
-            param.requires_grad = False
-
-    # Make classifier
-    if model_name == "densenet169":
-        n_in = next(model.classifier.modules()).in_features
+    if model_name == "mymodel":
+        n_out = len(labelsdict)
+        model = Myclassifier(out_dim=n_out, hidden=n_hidden[0], p=0.5)
     else:
-        n_in = next(model.fc.modules()).in_features
-        model = torch.nn.Sequential(*(list(model.children())[:-1]))
-    n_out = len(labelsdict)
-    model.classifier = NN_Classifier(input_size=n_in, output_size=n_out, hidden_layers=n_hidden)
+        model = getattr(models, model_name)(pretrained=not from_scratch)
+        # Freeze parameters that we don't need to re-train
+        if not train_all_parameters:
+            for param in model.parameters():
+                param.requires_grad = False
+
+        # Make classifier
+        if model_name == "densenet169":
+            n_in = next(model.classifier.modules()).in_features
+        else:
+            n_in = next(model.fc.modules()).in_features
+            model = torch.nn.Sequential(*(list(model.children())[:-1]))
+
+        n_out = len(labelsdict)
+        model.classifier = NN_Classifier(input_size=n_in, output_size=n_out, hidden_layers=n_hidden)
 
     # Define criterion and optimizer
     criterion = nn.NLLLoss()
-    optimizer = optim.Adam(model.classifier.parameters(), lr=lr)
+    if train_all_parameters or from_scratch or model_name == "mymodel":
+        optimizer = optim.Adam(model.parameters(), lr=lr)
+    else:
+        optimizer = optim.Adam(model.classifier.parameters(), lr=lr)
 
     model.to(device)
     start = time.time()
@@ -127,7 +204,6 @@ def make_NN(n_hidden, n_epoch, labelsdict, lr, device, model_name, trainloader, 
         model.train()
         for images, labels in trainloader:
             images, labels = images.to(device), labels.to(device)
-
             steps += 1
 
             optimizer.zero_grad()
@@ -156,7 +232,7 @@ def make_NN(n_hidden, n_epoch, labelsdict, lr, device, model_name, trainloader, 
 
                 # Make sure training is back on
                 model.train()
-        if (e+1) % 10 == 0:
+        if (e + 1) % 10 == 0:
             plot_loss(loss_list, val_loss_list, accuracy_list, name + "_" + str(e))
     plot_loss(loss_list, val_loss_list, accuracy_list, name)
     # Add model info
