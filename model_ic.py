@@ -158,7 +158,9 @@ def make_NN(n_hidden, n_epoch, labelsdict, lr, device, model_name, trainloader, 
 
                 # Make sure training is back on
                 model.train()
-    plot_loss(loss_list, val_loss_list, accuracy_list, name)
+        if e % 10 == 0:
+            plot_loss(loss_list, val_loss_list, accuracy_list, name + str(e))
+
     # Add model info 
     model.classifier.n_in = n_in
     model.classifier.n_hidden = n_hidden
