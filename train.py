@@ -21,7 +21,7 @@ cat_to_name = read_jason(args.category_names)
 trainloader, testloader, validloader, train_data = load_data(args.data_dir)
 
 model = make_NN(n_hidden=[args.hidden_units], n_epoch=args.epochs, labelsdict=cat_to_name, lr=args.learning_rate, device=args.gpu, \
-                model_name=args.arch, trainloader=trainloader, validloader=validloader, train_data=train_data, from_scratch=args.scratch, train_all_parameters=args.all)
+                model_name=args.arch, trainloader=trainloader, validloader=validloader, testloader=testloader, train_data=train_data, from_scratch=args.scratch, train_all_parameters=args.all)
 
 if args.save_dir:
     save_checkpoint(model, args.save_dir)

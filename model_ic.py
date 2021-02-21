@@ -9,6 +9,7 @@ import torch.nn.functional as F
 from torchvision import models
 import matplotlib.pyplot as plt
 
+
 def plot_loss(train_loss, val_loss, accuracy, name):
     plt.figure()
     plt.title("Training loss")
@@ -27,7 +28,6 @@ def plot_loss(train_loss, val_loss, accuracy, name):
     plt.xlabel("Epoch")
     plt.savefig(f"{name}_Accuracy.png")
     plt.close()
-
 
 
 # Define classifier class
@@ -87,7 +87,8 @@ def validation(model, testloader, criterion, device):
 
 
 # Define NN function
-def make_NN(n_hidden, n_epoch, labelsdict, lr, device, model_name, trainloader, validloader, train_data, from_scratch,
+def make_NN(n_hidden, n_epoch, labelsdict, lr, device, model_name, trainloader, validloader, testloader, train_data,
+            from_scratch,
             train_all_parameters):
     name = model_name + "_all" if train_all_parameters else "" + "_scr" if from_scratch else ""
     # Import pre-trained NN model 
@@ -166,6 +167,11 @@ def make_NN(n_hidden, n_epoch, labelsdict, lr, device, model_name, trainloader, 
     model.classifier.optimizer_state_dict = optimizer.state_dict
     model.classifier.model_name = model_name
     model.classifier.class_to_idx = train_data.class_to_idx
+
+    with torch.no_grad():
+        test_loss, test_accuracy = validation(model, testloader, criterion, device)
+
+    print(f"Test loss:{test_loss / len(testloader):.3f} Test Accuracy:{test_accuracy / len(testloader):.3f}")
 
     print('model:', model_name, '- hidden layers:', n_hidden, '- epochs:', n_epoch, '- lr:', lr)
     print(f"Run time: {(time.time() - start) / 60:.3f} min")
