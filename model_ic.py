@@ -147,10 +147,8 @@ def make_NN(n_hidden, n_epoch, labelsdict, lr, device, model_name, trainloader, 
                 with torch.no_grad():
                     test_loss, accuracy = validation(model, validloader, criterion, device)
 
-                logger.info("Epoch: {}/{} - ".format(e + 1, epochs),
-                      "Training Loss: {:.3f} - ".format(running_loss / print_every),
-                      "Validation Loss: {:.3f} - ".format(test_loss / len(validloader)),
-                      "Validation Accuracy: {:.3f}".format(accuracy / len(validloader)))
+                logger.info(
+                    f"Epoch: {e + 1}/{epochs} - Training Loss: {running_loss / print_every:.3f} - alidation Loss: {test_loss / len(validloader):.3f} - Validation Accuracy: {accuracy / len(validloader):.3f}")
                 loss_list.append(running_loss / print_every)
                 val_loss_list.append(test_loss / len(validloader))
                 accuracy_list.append(accuracy / len(validloader))
