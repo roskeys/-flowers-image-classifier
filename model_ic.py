@@ -88,11 +88,11 @@ def validation(model, testloader, criterion, device):
 
 # Define NN function
 def make_NN(n_hidden, n_epoch, labelsdict, lr, device, model_name, trainloader, validloader, testloader, train_data,
-            from_scratch,
-            train_all_parameters):
+            from_scratch, train_all_parameters, logger):
     name = model_name + ("_all" if train_all_parameters else "") + ("_scr" if from_scratch else "")
-    print(name)
-    # Import pre-trained NN model 
+    logger.info(name)
+
+    # Import pre-trained NN model
     model = getattr(models, model_name)(pretrained=not from_scratch)
 
     # Freeze parameters that we don't need to re-train
@@ -147,7 +147,7 @@ def make_NN(n_hidden, n_epoch, labelsdict, lr, device, model_name, trainloader, 
                 with torch.no_grad():
                     test_loss, accuracy = validation(model, validloader, criterion, device)
 
-                print("Epoch: {}/{} - ".format(e + 1, epochs),
+                logger.info("Epoch: {}/{} - ".format(e + 1, epochs),
                       "Training Loss: {:.3f} - ".format(running_loss / print_every),
                       "Validation Loss: {:.3f} - ".format(test_loss / len(validloader)),
                       "Validation Accuracy: {:.3f}".format(accuracy / len(validloader)))
@@ -174,10 +174,10 @@ def make_NN(n_hidden, n_epoch, labelsdict, lr, device, model_name, trainloader, 
     with torch.no_grad():
         test_loss, test_accuracy = validation(model, testloader, criterion, device)
 
-    print(f"Test loss:{test_loss / len(testloader):.3f} Test Accuracy:{test_accuracy / len(testloader):.3f}")
+    logger.info(f"Test loss:{test_loss / len(testloader):.3f} Test Accuracy:{test_accuracy / len(testloader):.3f}")
 
-    print('model:', model_name, '- hidden layers:', n_hidden, '- epochs:', n_epoch, '- lr:', lr)
-    print(f"Run time: {(time.time() - start) / 60:.3f} min")
+    logger.info('model:', model_name, '- hidden layers:', n_hidden, '- epochs:', n_epoch, '- lr:', lr)
+    logger.info(f"Run time: {(time.time() - start) / 60:.3f} min")
     return model
 
 
@@ -239,5 +239,3 @@ def test_model(model, testloader, device='cuda'):
         ps = torch.exp(output)
         equality = (labels.data == ps.max(dim=1)[1])
         accuracy += equality.type(torch.FloatTensor).mean()
-
-    print('Testing Accuracy: {:.3f}'.format(accuracy / len(testloader)))
