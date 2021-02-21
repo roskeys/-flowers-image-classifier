@@ -33,7 +33,7 @@ cat_to_name = read_jason(args.category_names)
 trainloader, testloader, validloader, train_data = load_data(args.data_dir)
 
 handler = logging.FileHandler(
-    f'{args.arch}{"_all" if args.all else ""}{"_scr" if args.scratch else ""}-{time.strftime("%d-%H-%M-%S", time.localtime(time.time()))}.log')
+    f'logs/{args.arch}{"_all" if args.all else ""}{"_scr" if args.scratch else ""}-{time.strftime("%d-%H-%M-%S", time.localtime(time.time()))}.log')
 handler.setLevel(logging.INFO)
 handler.setFormatter(formatter)
 logger.addHandler(handler)

@@ -18,7 +18,7 @@ def plot_loss(train_loss, val_loss, accuracy, name):
     plt.ylabel("Loss")
     plt.xlabel("Epoch")
     plt.legend(["Train", "Validation"], loc="upper left")
-    plt.savefig(f"{name}_Loss_plot.png")
+    plt.savefig(f"plots/{name}_Loss_plot.png")
     plt.close()
 
     plt.figure()
@@ -26,7 +26,7 @@ def plot_loss(train_loss, val_loss, accuracy, name):
     plt.plot(accuracy)
     plt.ylabel("Accuracy")
     plt.xlabel("Epoch")
-    plt.savefig(f"{name}_Accuracy.png")
+    plt.savefig(f"plots/{name}_Accuracy.png")
     plt.close()
 
 
