@@ -7,6 +7,27 @@ from torch import nn
 from torch import optim
 import torch.nn.functional as F
 from torchvision import models
+import matplotlib.pyplot as plt
+
+def plot_loss(train_loss, val_loss, accuracy, name):
+    plt.figure()
+    plt.title("Training loss")
+    plt.plot(train_loss)
+    plt.plot(val_loss)
+    plt.ylabel("Loss")
+    plt.xlabel("Epoch")
+    plt.legend(["Train", "Validation"], loc="upper left")
+    plt.savefig(f"{name}_Loss_plot.png")
+    plt.close()
+
+    plt.figure()
+    plt.title("Accuracy")
+    plt.plot(accuracy)
+    plt.ylabel("Accuracy")
+    plt.xlabel("Epoch")
+    plt.savefig(f"{name}_Accuracy.png")
+    plt.close()
+
 
 
 # Define classifier class
@@ -68,6 +89,7 @@ def validation(model, testloader, criterion, device):
 # Define NN function
 def make_NN(n_hidden, n_epoch, labelsdict, lr, device, model_name, trainloader, validloader, train_data, from_scratch,
             train_all_parameters):
+    name = model_name + "_all" if train_all_parameters else "" + "_scr" if from_scratch else ""
     # Import pre-trained NN model 
     model = getattr(models, model_name)(pretrained=not from_scratch)
 
@@ -96,6 +118,9 @@ def make_NN(n_hidden, n_epoch, labelsdict, lr, device, model_name, trainloader, 
     steps = 0
     running_loss = 0
     print_every = 40
+    val_loss_list = []
+    loss_list = []
+    accuracy_list = []
     for e in range(epochs):
         model.train()
         for images, labels in trainloader:
@@ -124,12 +149,14 @@ def make_NN(n_hidden, n_epoch, labelsdict, lr, device, model_name, trainloader, 
                       "Training Loss: {:.3f} - ".format(running_loss / print_every),
                       "Validation Loss: {:.3f} - ".format(test_loss / len(validloader)),
                       "Validation Accuracy: {:.3f}".format(accuracy / len(validloader)))
-
+                loss_list.append(running_loss / print_every)
+                val_loss_list.append(test_loss / len(validloader))
+                accuracy_list.append(accuracy / len(validloader))
                 running_loss = 0
 
                 # Make sure training is back on
                 model.train()
-
+    plot_loss(loss_list, val_loss_list, accuracy_list, name)
     # Add model info 
     model.classifier.n_in = n_in
     model.classifier.n_hidden = n_hidden
