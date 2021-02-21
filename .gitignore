@@ -1,0 +1,6 @@
+__pycache__/
+logs/
+plots/
+saved_models/
+*.log
+*.png
