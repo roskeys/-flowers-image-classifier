@@ -136,7 +136,7 @@ class Myclassifier2(nn.Module):
 
         self.out = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(1024, hidden),
+            nn.Linear(6272, hidden),
             nn.Dropout(p=p),
             nn.LeakyReLU(0.2),
             nn.Linear(hidden, out_dim)
