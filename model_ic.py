@@ -28,9 +28,7 @@ def plot_loss(train_loss, val_loss, accuracy, name):
     plt.xlabel("Epoch")
     plt.savefig(f"plots/{name}_Accuracy.png")
     plt.close()
-
-
-class Myclassifier(nn.Module):
+class Myclassifier1(nn.Module):
     def __init__(self, out_dim, hidden=1024, p=0.5):
         super().__init__()
         self.layer1 = nn.Sequential(
@@ -72,15 +70,10 @@ class Myclassifier(nn.Module):
         self.out = nn.Sequential(
             nn.Flatten(),
             nn.Linear(1152, hidden),
+            nn.Dropout(p=p),
             nn.LeakyReLU(0.2),
             nn.Linear(hidden, out_dim)
         )
-
-        self.flatten = nn.Flatten()
-        self.linear1 = nn.Linear(1152, hidden)
-        self.leakyrelu = nn.LeakyReLU(0.2)
-        self.linear2 = nn.Linear(hidden, out_dim)
-        self.dropout = nn.Dropout(p=p)
 
     def forward(self, x):
         x = self.layer1(x)
@@ -90,10 +83,76 @@ class Myclassifier(nn.Module):
         x = self.layer5(x)
         x = self.layer6(x)
         x = self.out(x)
-        # x = self.flatten(x)
-        # x = self.linear1(x)
-        # x = self.leakyrelu(x)
-        # x = self.linear2(x)
+        return F.log_softmax(x, dim=1)
+
+
+class Myclassifier2(nn.Module):
+    def __init__(self, out_dim, hidden=1024, p=0.5):
+        super().__init__()
+        self.layer1 = nn.Sequential(
+            nn.Conv2d(in_channels=3, out_channels=32, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(32),
+        )
+
+        self.layer2 = nn.Sequential(
+            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.BatchNorm2d(32),
+        )
+
+        self.layer3 = nn.Sequential(
+            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(64),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+
+        self.layer4 = nn.Sequential(
+            nn.Conv2d(in_channels=64, out_channels=64, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.BatchNorm2d(64),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+
+        self.layer5 = nn.Sequential(
+            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(128),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+
+        self.layer6 = nn.Sequential(
+            nn.Conv2d(in_channels=128, out_channels=128, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.BatchNorm2d(128),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+
+        self.layer7 = nn.Sequential(
+            nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(256),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+
+        self.layer8 = nn.Sequential(
+            nn.Conv2d(in_channels=256, out_channels=256, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.BatchNorm2d(256),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+
+        self.out = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(2304, hidden),
+            nn.Dropout(p=p),
+            nn.LeakyReLU(0.2),
+            nn.Linear(hidden, out_dim)
+        )
+
+    def forward(self, x):
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+        x = self.layer5(x)
+        x = self.layer6(x)
+        x = self.layer7(x)
+        x = self.layer8(x)
+        x = self.out(x)
         return F.log_softmax(x, dim=1)
 
 # Define classifier class
@@ -163,9 +222,12 @@ def make_NN(n_hidden, n_epoch, labelsdict, lr, device, model_name, trainloader, 
     logger.info(name)
 
     # Import pre-trained NN model
-    if model_name == "mymodel":
+    if model_name == "mymodel1":
         n_out = len(labelsdict)
-        model = Myclassifier(out_dim=n_out, hidden=n_hidden[0], p=0.5)
+        model = Myclassifier1(out_dim=n_out, hidden=n_hidden[0], p=0.5)
+    elif model_name == "mymodel2":
+        n_out = len(labelsdict)
+        model = Myclassifier1(out_dim=n_out, hidden=n_hidden[0], p=0.5)
     else:
         model = getattr(models, model_name)(pretrained=not from_scratch)
         # Freeze parameters that we don't need to re-train
@@ -185,7 +247,7 @@ def make_NN(n_hidden, n_epoch, labelsdict, lr, device, model_name, trainloader, 
 
     # Define criterion and optimizer
     criterion = nn.NLLLoss()
-    if train_all_parameters or from_scratch or model_name == "mymodel":
+    if train_all_parameters or from_scratch or model_name == "mymodel1" or model_name == "mymodel2":
         optimizer = optim.Adam(model.parameters(), lr=lr)
     else:
         optimizer = optim.Adam(model.classifier.parameters(), lr=lr)
@@ -230,7 +292,7 @@ def make_NN(n_hidden, n_epoch, labelsdict, lr, device, model_name, trainloader, 
                     highest_accuracy = test_loss / len(validloader)
 
                 logger.info(
-                    f"Epoch: {e + 1}/{epochs} - Training Loss: {running_loss / print_every:.3f} - alidation Loss: {test_loss / len(validloader):.3f} - Validation Accuracy: {accuracy / len(validloader):.3f}")
+                    f"Epoch: {e + 1}/{epochs} - Training Loss: {running_loss / print_every:.3f} - validation Loss: {test_loss / len(validloader):.3f} - Validation Accuracy: {accuracy / len(validloader):.3f}")
                 loss_list.append(running_loss / print_every)
                 val_loss_list.append(test_loss / len(validloader))
                 accuracy_list.append(accuracy / len(validloader))
