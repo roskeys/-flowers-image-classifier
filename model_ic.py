@@ -92,65 +92,51 @@ class Myclassifier1(nn.Module):
 class Myclassifier2(nn.Module):
     def __init__(self, out_dim, hidden=1024, p=0.5):
         super().__init__()
-        self.layer1 = nn.Sequential(
-            nn.Conv2d(in_channels=3, out_channels=64, kernel_size=5, stride=1, padding=2, bias=False),
-            nn.BatchNorm2d(64),
+        self.layer1_1 = nn.Sequential(
+            nn.Conv2d(in_channels=3, out_channels=32, kernel_size=5, stride=1, padding=2, bias=False),
+            nn.BatchNorm2d(32),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+
+        self.layer1_2 = nn.Sequential(
+            nn.Conv2d(in_channels=3, out_channels=32, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(32),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+
+        self.layer1_3 = nn.Sequential(
+            nn.Conv2d(in_channels=3, out_channels=32, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.BatchNorm2d(32),
+            nn.MaxPool2d(kernel_size=2, stride=2)
         )
 
         self.layer2 = nn.Sequential(
-            nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.Conv2d(in_channels=96, out_channels=64, kernel_size=3, stride=1, padding=1, bias=False),
             nn.BatchNorm2d(64),
+            nn.MaxPool2d(kernel_size=2, stride=2)
         )
 
         self.layer3 = nn.Sequential(
-            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=5, stride=1, padding=2, bias=False),
-            nn.BatchNorm2d(128),
+            nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(64),
+            nn.MaxPool2d(kernel_size=2, stride=2)
         )
 
         self.layer4 = nn.Sequential(
-            nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1, bias=False),
-            nn.BatchNorm2d(128),
+            nn.Conv2d(in_channels=64, out_channels=64, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.BatchNorm2d(64),
+            nn.MaxPool2d(kernel_size=2, stride=2)
         )
 
         self.layer5 = nn.Sequential(
-            nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1, bias=False),
-            nn.BatchNorm2d(256),
-            nn.MaxPool2d(kernel_size=2, stride=2)
-        )
-
-        self.layer6 = nn.Sequential(
-            nn.Conv2d(in_channels=256, out_channels=256, kernel_size=1, stride=1, padding=0, bias=False),
-            nn.BatchNorm2d(256),
-            nn.MaxPool2d(kernel_size=2, stride=2)
-        )
-
-        self.layer7 = nn.Sequential(
-            nn.Conv2d(in_channels=256, out_channels=512, kernel_size=3, stride=1, padding=1, bias=False),
-            nn.BatchNorm2d(512),
-            nn.MaxPool2d(kernel_size=2, stride=2)
-        )
-
-        self.layer8 = nn.Sequential(
-            nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1, bias=False),
-            nn.BatchNorm2d(512),
-            nn.MaxPool2d(kernel_size=2, stride=2)
-        )
-
-        self.layer9 = nn.Sequential(
-            nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1, bias=False),
-            nn.BatchNorm2d(512),
-            nn.MaxPool2d(kernel_size=2, stride=2)
-        )
-
-        self.layer10 = nn.Sequential(
-            nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1, bias=False),
-            nn.BatchNorm2d(512),
+            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(128),
             nn.MaxPool2d(kernel_size=2, stride=2)
         )
 
         self.out = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(4608, hidden),
+            nn.Linear(1024, hidden),
             nn.Dropout(p=p),
             nn.LeakyReLU(0.2),
             nn.Linear(hidden, out_dim)
@@ -158,16 +144,14 @@ class Myclassifier2(nn.Module):
         self.classifier = nn.Linear(in_features=1, out_features=1)
 
     def forward(self, x):
-        x = self.layer1(x)
+        x1 = self.layer1_1(x)
+        x2 = self.layer1_2(x)
+        x3 = self.layer1_3(x)
+        x = torch.cat([x1, x2, x3], dim=1)
         x = self.layer2(x)
         x = self.layer3(x)
         x = self.layer4(x)
         x = self.layer5(x)
-        x = self.layer6(x)
-        x = self.layer7(x)
-        x = self.layer8(x)
-        x = self.layer9(x)
-        x = self.layer10(x)
         x = self.out(x)
         return F.log_softmax(x, dim=1)
 
@@ -281,12 +265,6 @@ def make_NN(n_hidden, n_epoch, labelsdict, lr, device, model_name, trainloader, 
     accuracy_list = []
     highest_accuracy = 0
     test = False
-    # if os.path.exists("datas.h5py"):
-    #     datas = torch.load("datas.h5py")
-    # else:
-    #     datas = [(images, labels) for images, labels in trainloader]
-    #     print("Finished loading")
-    #     torch.save(datas, "datas.h5py")
     for e in range(epochs):
         model.train()
         for images, labels in trainloader:
