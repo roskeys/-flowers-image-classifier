@@ -234,7 +234,11 @@ def make_NN(n_hidden, n_epoch, labelsdict, lr, device, model_name, trainloader, 
                 model.train()
         if (e + 1) % 10 == 0:
             plot_loss(loss_list, val_loss_list, accuracy_list, name + "_" + str(e))
-    plot_loss(loss_list, val_loss_list, accuracy_list, name)
+        if (e+1) % 50 == 0:
+            with torch.no_grad():
+                test_loss, test_accuracy = validation(model, testloader, criterion, device)
+            logger.info(
+                f"Test loss:{test_loss / len(testloader):.3f} Test Accuracy:{test_accuracy / len(testloader):.3f}")
     # Add model info
     model.classifier.n_in = n_in
     model.classifier.n_hidden = n_hidden
@@ -245,6 +249,7 @@ def make_NN(n_hidden, n_epoch, labelsdict, lr, device, model_name, trainloader, 
     model.classifier.model_name = model_name
     model.classifier.class_to_idx = train_data.class_to_idx
 
+    plot_loss(loss_list, val_loss_list, accuracy_list, name)
     with torch.no_grad():
         test_loss, test_accuracy = validation(model, testloader, criterion, device)
 
