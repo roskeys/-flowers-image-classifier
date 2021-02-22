@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 import time
 from collections import OrderedDict
@@ -74,6 +76,7 @@ class Myclassifier1(nn.Module):
             nn.LeakyReLU(0.2),
             nn.Linear(hidden, out_dim)
         )
+        self.classifier = nn.Linear(in_features=1, out_features=1)
 
     def forward(self, x):
         x = self.layer1(x)
@@ -90,58 +93,69 @@ class Myclassifier2(nn.Module):
     def __init__(self, out_dim, hidden=1024, p=0.5):
         super().__init__()
         self.layer1 = nn.Sequential(
-            nn.Conv2d(in_channels=3, out_channels=32, kernel_size=3, stride=1, padding=1, bias=False),
-            nn.BatchNorm2d(32),
+            nn.Conv2d(in_channels=3, out_channels=64, kernel_size=5, stride=1, padding=2, bias=False),
+            nn.BatchNorm2d(64),
         )
 
         self.layer2 = nn.Sequential(
-            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=1, stride=1, padding=0, bias=False),
-            nn.BatchNorm2d(32),
+            nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(64),
         )
 
         self.layer3 = nn.Sequential(
-            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=1, padding=1, bias=False),
-            nn.BatchNorm2d(64),
-            nn.MaxPool2d(kernel_size=2, stride=2)
+            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=5, stride=1, padding=2, bias=False),
+            nn.BatchNorm2d(128),
         )
 
         self.layer4 = nn.Sequential(
-            nn.Conv2d(in_channels=64, out_channels=64, kernel_size=1, stride=1, padding=0, bias=False),
-            nn.BatchNorm2d(64),
-            nn.MaxPool2d(kernel_size=2, stride=2)
+            nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(128),
         )
 
         self.layer5 = nn.Sequential(
-            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1, bias=False),
-            nn.BatchNorm2d(128),
-            nn.MaxPool2d(kernel_size=2, stride=2)
-        )
-
-        self.layer6 = nn.Sequential(
-            nn.Conv2d(in_channels=128, out_channels=128, kernel_size=1, stride=1, padding=0, bias=False),
-            nn.BatchNorm2d(128),
-            nn.MaxPool2d(kernel_size=2, stride=2)
-        )
-
-        self.layer7 = nn.Sequential(
             nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1, bias=False),
             nn.BatchNorm2d(256),
             nn.MaxPool2d(kernel_size=2, stride=2)
         )
 
-        self.layer8 = nn.Sequential(
+        self.layer6 = nn.Sequential(
             nn.Conv2d(in_channels=256, out_channels=256, kernel_size=1, stride=1, padding=0, bias=False),
             nn.BatchNorm2d(256),
             nn.MaxPool2d(kernel_size=2, stride=2)
         )
 
+        self.layer7 = nn.Sequential(
+            nn.Conv2d(in_channels=256, out_channels=512, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(512),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+
+        self.layer8 = nn.Sequential(
+            nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(512),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+
+        self.layer9 = nn.Sequential(
+            nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(512),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+
+        self.layer10 = nn.Sequential(
+            nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(512),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+
         self.out = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(2304, hidden),
+            nn.Linear(4608, hidden),
             nn.Dropout(p=p),
             nn.LeakyReLU(0.2),
             nn.Linear(hidden, out_dim)
         )
+        self.classifier = nn.Linear(in_features=1, out_features=1)
 
     def forward(self, x):
         x = self.layer1(x)
@@ -152,6 +166,8 @@ class Myclassifier2(nn.Module):
         x = self.layer6(x)
         x = self.layer7(x)
         x = self.layer8(x)
+        x = self.layer9(x)
+        x = self.layer10(x)
         x = self.out(x)
         return F.log_softmax(x, dim=1)
 
@@ -223,11 +239,13 @@ def make_NN(n_hidden, n_epoch, labelsdict, lr, device, model_name, trainloader, 
 
     # Import pre-trained NN model
     if model_name == "mymodel1":
+        n_in = 1
         n_out = len(labelsdict)
         model = Myclassifier1(out_dim=n_out, hidden=n_hidden[0], p=0.5)
     elif model_name == "mymodel2":
+        n_in = 1
         n_out = len(labelsdict)
-        model = Myclassifier1(out_dim=n_out, hidden=n_hidden[0], p=0.5)
+        model = Myclassifier2(out_dim=n_out, hidden=n_hidden[0], p=0.5)
     else:
         model = getattr(models, model_name)(pretrained=not from_scratch)
         # Freeze parameters that we don't need to re-train
@@ -244,7 +262,6 @@ def make_NN(n_hidden, n_epoch, labelsdict, lr, device, model_name, trainloader, 
 
         n_out = len(labelsdict)
         model.classifier = NN_Classifier(input_size=n_in, output_size=n_out, hidden_layers=n_hidden)
-
     # Define criterion and optimizer
     criterion = nn.NLLLoss()
     if train_all_parameters or from_scratch or model_name == "mymodel1" or model_name == "mymodel2":
@@ -264,9 +281,15 @@ def make_NN(n_hidden, n_epoch, labelsdict, lr, device, model_name, trainloader, 
     accuracy_list = []
     highest_accuracy = 0
     test = False
+    if os.path.exists("datas.h5py"):
+        datas = torch.load("datas.h5py")
+    else:
+        datas = [(images, labels) for images, labels in trainloader]
+        print("Finished loading")
+        torch.save(datas, "datas.h5py")
     for e in range(epochs):
         model.train()
-        for images, labels in trainloader:
+        for images, labels in datas:
             images, labels = images.to(device), labels.to(device)
             steps += 1
 
