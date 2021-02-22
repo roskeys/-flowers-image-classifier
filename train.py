@@ -45,3 +45,5 @@ model = make_NN(n_hidden=[args.hidden_units], n_epoch=args.epochs, labelsdict=ca
 
 if args.save_dir:
     save_checkpoint(model, args.save_dir)
+
+logger.info(f'Finished {args.arch}{"_all" if args.all else ""}{"_scr" if args.scratch else ""}')
