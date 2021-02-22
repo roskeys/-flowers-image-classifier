@@ -227,6 +227,7 @@ def make_NN(n_hidden, n_epoch, labelsdict, lr, device, model_name, trainloader, 
 
                 if test_loss / len(validloader) > highest_accuracy:
                     test = True
+                    highest_accuracy = test_loss / len(validloader)
 
                 logger.info(
                     f"Epoch: {e + 1}/{epochs} - Training Loss: {running_loss / print_every:.3f} - alidation Loss: {test_loss / len(validloader):.3f} - Validation Accuracy: {accuracy / len(validloader):.3f}")
