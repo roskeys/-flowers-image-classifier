@@ -288,9 +288,9 @@ def make_NN(n_hidden, n_epoch, labelsdict, lr, device, model_name, trainloader, 
                 with torch.no_grad():
                     test_loss, accuracy = validation(model, validloader, criterion, device)
 
-                if test_loss / len(validloader) > highest_accuracy:
+                if accuracy / len(validloader) > highest_accuracy:
                     test = True
-                    highest_accuracy = test_loss / len(validloader)
+                    highest_accuracy = accuracy / len(validloader)
 
                 logger.info(
                     f"Epoch: {e + 1}/{epochs} - Training Loss: {running_loss / print_every:.3f} - validation Loss: {test_loss / len(validloader):.3f} - Validation Accuracy: {accuracy / len(validloader):.3f}")
