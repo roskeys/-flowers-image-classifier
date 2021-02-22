@@ -281,15 +281,15 @@ def make_NN(n_hidden, n_epoch, labelsdict, lr, device, model_name, trainloader, 
     accuracy_list = []
     highest_accuracy = 0
     test = False
-    if os.path.exists("datas.h5py"):
-        datas = torch.load("datas.h5py")
-    else:
-        datas = [(images, labels) for images, labels in trainloader]
-        print("Finished loading")
-        torch.save(datas, "datas.h5py")
+    # if os.path.exists("datas.h5py"):
+    #     datas = torch.load("datas.h5py")
+    # else:
+    #     datas = [(images, labels) for images, labels in trainloader]
+    #     print("Finished loading")
+    #     torch.save(datas, "datas.h5py")
     for e in range(epochs):
         model.train()
-        for images, labels in datas:
+        for images, labels in trainloader:
             images, labels = images.to(device), labels.to(device)
             steps += 1
 
