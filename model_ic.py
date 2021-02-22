@@ -200,6 +200,8 @@ def make_NN(n_hidden, n_epoch, labelsdict, lr, device, model_name, trainloader, 
     val_loss_list = []
     loss_list = []
     accuracy_list = []
+    highest_accuracy = 0
+    test = False
     for e in range(epochs):
         model.train()
         for images, labels in trainloader:
@@ -223,6 +225,9 @@ def make_NN(n_hidden, n_epoch, labelsdict, lr, device, model_name, trainloader, 
                 with torch.no_grad():
                     test_loss, accuracy = validation(model, validloader, criterion, device)
 
+                if test_loss / len(validloader) > highest_accuracy:
+                    test = True
+
                 logger.info(
                     f"Epoch: {e + 1}/{epochs} - Training Loss: {running_loss / print_every:.3f} - alidation Loss: {test_loss / len(validloader):.3f} - Validation Accuracy: {accuracy / len(validloader):.3f}")
                 loss_list.append(running_loss / print_every)
@@ -232,13 +237,15 @@ def make_NN(n_hidden, n_epoch, labelsdict, lr, device, model_name, trainloader, 
 
                 # Make sure training is back on
                 model.train()
+
         if (e + 1) % 10 == 0:
             plot_loss(loss_list, val_loss_list, accuracy_list, name + "_" + str(e))
-        if (e+1) % 50 == 0:
+        if (e+1) % 50 == 0 or test:
             with torch.no_grad():
                 test_loss, test_accuracy = validation(model, testloader, criterion, device)
             logger.info(
                 f"Test loss:{test_loss / len(testloader):.3f} Test Accuracy:{test_accuracy / len(testloader):.3f}")
+            test = False
     # Add model info
     model.classifier.n_in = n_in
     model.classifier.n_hidden = n_hidden
@@ -255,7 +262,7 @@ def make_NN(n_hidden, n_epoch, labelsdict, lr, device, model_name, trainloader, 
 
     logger.info(f"Test loss:{test_loss / len(testloader):.3f} Test Accuracy:{test_accuracy / len(testloader):.3f}")
 
-    logger.info('model:', model_name, '- hidden layers:', n_hidden, '- epochs:', n_epoch, '- lr:', lr)
+    logger.info(f'model: {model_name} - hidden layers: {n_hidden} - epochs: {n_epoch} - lr: {lr}')
     logger.info(f"Run time: {(time.time() - start) / 60:.3f} min")
     return model
 
