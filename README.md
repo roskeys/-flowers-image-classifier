@@ -1,14 +1,31 @@
 ## Deep Learning with PyTorch - Image Classifier
 
-### Project Overview
-In this project I use deep learning with PyTorch to make an image classifier that predicts the top K flower classes and their associated probabilities from a picture.  
+To run this project, please use:
 
-### Data
-This project uses the [102 Category Flower Dataset](http://www.robots.ox.ac.uk/~vgg/data/flowers/102/index.html) from the University of Oxford. It consist of 102 categories of flowers, each containing 40 to 258 images.
+```bash
+rm -rf logs/
+rm -rf saved_models/
+rm -rf plots/
+mkdir logs
+mkdir saved_models
+mkdir plots
 
-### Project Files
-The `image_classifier.ipynb` file contains the Jupyter Notebook for the design, training, testing and evaluation of the deep learning model.
+## resnet 152 comparison
+python train.py "./flowers" --gpu --epochs 20 --arch resnet152
 
-The files `model_ic.py`, `utils_ic.py`, `train.py`, `predict.py` convert the model into a command line application. `train.py` trains a new network on a dataset and saves the model as a checkpoint. `predict.py` uses a trained network to predict the class for an input image.
+## Fine tuning the top layers only
+python train.py "./flowers" --gpu --epochs 20
 
-I completed this project as a part of the Udacity Data Scientist Nanodegree program. 
+## Fine tuning the whole model
+python train.py "./flowers" --gpu --epochs 20 --all True
+
+## Train the whole model from scratch
+python train.py "./flowers" --gpu --epochs 20 --scratch True --all True
+
+## Train the own model 1
+python train.py "./flowers" --gpu --epochs 20 --scratch True --all True --arch mymodel1
+
+## Train the own model 2
+python train.py "./flowers" --gpu --epochs 20 --scratch True --all True --arch mymodel2
+```
+
