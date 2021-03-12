@@ -233,7 +233,7 @@ def make_NN(n_hidden, n_epoch, labelsdict, lr, device, model_name, trainloader, 
     else:
         model = getattr(models, model_name)(pretrained=not from_scratch)
         # Freeze parameters that we don't need to re-train
-        if not train_all_parameters or not from_scratch:
+        if not train_all_parameters and not train_all_parameters:
             for param in model.parameters():
                 param.requires_grad = False
 
